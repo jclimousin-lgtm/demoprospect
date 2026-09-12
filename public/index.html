@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture de documents</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #fafaf9;
+    color: #1c1c1a;
+    padding: 32px 16px 80px;
+  }
+  .conteneur { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 1.15rem; font-weight: 600; margin: 0 0 24px; color: #44403c; }
+
+  .zone-depot {
+    border: 2px dashed #c9c5bd;
+    border-radius: 10px;
+    padding: 48px 20px;
+    text-align: center;
+    cursor: pointer;
+    background: #fff;
+    transition: border-color .15s, background .15s;
+  }
+  .zone-depot.survol { border-color: #57534e; background: #f5f4f1; }
+  .zone-depot p { margin: 0; color: #78716c; font-size: .95rem; }
+  .zone-depot input { display: none; }
+
+  .etat {
+    margin-top: 20px;
+    font-size: .9rem;
+    color: #78716c;
+    display: none;
+  }
+  .etat.visible { display: block; }
+
+  .erreur {
+    margin-top: 20px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: .9rem;
+    display: none;
+  }
+  .erreur.visible { display: block; }
+
+  .resultat { margin-top: 32px; display: none; }
+  .resultat.visible { display: block; }
+
+  .champs-entete {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px 20px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid #e7e5e4;
+    border-radius: 8px;
+  }
+  .champ dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .03em; color: #a8a29e; margin-bottom: 2px; }
+  .champ dd { margin: 0; font-size: .95rem; font-weight: 500; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #e7e5e4;
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: .88rem;
+  }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #f0efec; }
+  th { background: #f5f4f1; font-weight: 600; color: #57534e; font-size: .76rem; text-transform: uppercase; letter-spacing: .02em; }
+  td.num, th.num { text-align: right; }
+  tr:last-child td { border-bottom: none; }
+
+  .actions { margin-top: 20px; display: flex; gap: 10px; align-items: center; }
+  button {
+    font: inherit;
+    padding: 9px 16px;
+    border-radius: 7px;
+    border: 1px solid #292524;
+    background: #292524;
+    color: #fff;
+    cursor: pointer;
+    font-size: .88rem;
+  }
+  button:hover { background: #44403c; }
+  button.secondaire {
+    background: #fff;
+    color: #292524;
+    border-color: #d6d3d1;
+  }
+  button.secondaire:hover { background: #f5f4f1; }
+
+  .confiance-basse { color: #b45309; }
+</style>
+</head>
+<body>
+<div class="conteneur">
+  <h1>Lecture de documents</h1>
+
+  <div class="zone-depot" id="zoneDepot">
+    <p>Glissez un document ici (PDF, JPG, PNG) — ou cliquez pour en choisir un</p>
+    <input type="file" id="entreeFichier" accept=".pdf,.jpg,.jpeg,.png,.webp">
+  </div>
+
+  <div class="etat" id="etat">Lecture du document…</div>
+  <div class="erreur" id="erreur"></div>
+
+  <div class="resultat" id="resultat">
+    <dl class="champs-entete" id="champsEntete"></dl>
+    <table>
+      <thead>
+        <tr>
+          <th>Désignation</th>
+          <th class="num">Qté</th>
+          <th class="num">Prix unitaire</th>
+          <th class="num">Montant</th>
+        </tr>
+      </thead>
+      <tbody id="corpsLignes"></tbody>
+    </table>
+    <div class="actions">
+      <button id="boutonCsv">Télécharger CSV</button>
+      <button class="secondaire" id="boutonNouveau">Nouveau document</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const zoneDepot = document.getElementById('zoneDepot');
+const entreeFichier = document.getElementById('entreeFichier');
+const etat = document.getElementById('etat');
+const erreur = document.getElementById('erreur');
+const resultat = document.getElementById('resultat');
+const champsEntete = document.getElementById('champsEntete');
+const corpsLignes = document.getElementById('corpsLignes');
+const boutonCsv = document.getElementById('boutonCsv');
+const boutonNouveau = document.getElementById('boutonNouveau');
+
+let dernierResultat = null;
+
+zoneDepot.addEventListener('click', () => entreeFichier.click());
+zoneDepot.addEventListener('dragover', (e) => { e.preventDefault(); zoneDepot.classList.add('survol'); });
+zoneDepot.addEventListener('dragleave', () => zoneDepot.classList.remove('survol'));
+zoneDepot.addEventListener('drop', (e) => {
+  e.preventDefault();
+  zoneDepot.classList.remove('survol');
+  if (e.dataTransfer.files.length) traiter(e.dataTransfer.files[0]);
+});
+entreeFichier.addEventListener('change', () => {
+  if (entreeFichier.files.length) traiter(entreeFichier.files[0]);
+});
+
+boutonNouveau.addEventListener('click', reinitialiser);
+boutonCsv.addEventListener('click', telechargerCsv);
+
+function reinitialiser() {
+  resultat.classList.remove('visible');
+  erreur.classList.remove('visible');
+  entreeFichier.value = '';
+  dernierResultat = null;
+}
+
+async function traiter(fichier) {
+  reinitialiser();
+  etat.textContent = 'Lecture du document…';
+  etat.classList.add('visible');
+
+  const donnees = new FormData();
+  donnees.append('document', fichier);
+
+  try {
+    const reponse = await fetch('analyser.php', { method: 'POST', body: donnees });
+    const corps = await reponse.json();
+    etat.classList.remove('visible');
+
+    if (!corps.succes) {
+      afficherErreur(corps.erreur || "Échec de la lecture.");
+      return;
+    }
+
+    afficherResultat(corps.champs);
+  } catch (e) {
+    etat.classList.remove('visible');
+    afficherErreur("Connexion impossible.");
+  }
+}
+
+function afficherErreur(message) {
+  erreur.textContent = message;
+  erreur.classList.add('visible');
+}
+
+function afficherResultat(champs) {
+  dernierResultat = champs;
+
+  const entetes = [
+    ['Fournisseur', champs.fournisseur],
+    ['N° document', champs.numero_document],
+    ['Date', champs.date],
+    ['Total HT', formaterMontant(champs.total_ht)],
+    ['TVA', formaterMontant(champs.tva)],
+    ['Total TTC', formaterMontant(champs.total_ttc)],
+  ];
+
+  champsEntete.innerHTML = entetes.map(([libelle, valeur]) => `
+    <div class="champ">
+      <dt>${libelle}</dt>
+      <dd>${valeur || '—'}</dd>
+    </div>
+  `).join('');
+
+  if (champs.confiance === 'basse') {
+    champsEntete.innerHTML += `
+      <div class="champ">
+        <dt>Confiance</dt>
+        <dd class="confiance-basse">basse</dd>
+      </div>`;
+  }
+
+  const lignes = champs.lignes || [];
+  corpsLignes.innerHTML = lignes.length
+    ? lignes.map(l => `
+        <tr>
+          <td>${l.designation || '—'}</td>
+          <td class="num">${l.quantite ?? ''}</td>
+          <td class="num">${formaterMontant(l.prix_unitaire)}</td>
+          <td class="num">${formaterMontant(l.montant)}</td>
+        </tr>
+      `).join('')
+    : '<tr><td colspan="4">Aucune ligne détectée.</td></tr>';
+
+  resultat.classList.add('visible');
+}
+
+function formaterMontant(valeur) {
+  if (valeur === undefined || valeur === null || valeur === '') return '';
+  const nombre = Number(valeur);
+  return Number.isFinite(nombre) ? nombre.toFixed(2) : String(valeur);
+}
+
+function telechargerCsv() {
+  if (!dernierResultat) return;
+  const c = dernierResultat;
+  const lignesCsv = [];
+
+  lignesCsv.push(['Fournisseur', 'N° document', 'Date', 'Total HT', 'TVA', 'Total TTC'].join(';'));
+  lignesCsv.push([c.fournisseur, c.numero_document, c.date, c.total_ht, c.tva, c.total_ttc]
+    .map(champCsv).join(';'));
+  lignesCsv.push('');
+  lignesCsv.push(['Désignation', 'Quantité', 'Prix unitaire', 'Montant'].join(';'));
+  (c.lignes || []).forEach(l => {
+    lignesCsv.push([l.designation, l.quantite, l.prix_unitaire, l.montant].map(champCsv).join(';'));
+  });
+
+  const contenu = '﻿' + lignesCsv.join('\r\n');
+  const blob = new Blob([contenu], { type: 'text/csv;charset=utf-8' });
+  const lien = document.createElement('a');
+  lien.href = URL.createObjectURL(blob);
+  lien.download = 'document-extrait.csv';
+  lien.click();
+  URL.revokeObjectURL(lien.href);
+}
+
+function champCsv(valeur) {
+  if (valeur === undefined || valeur === null) return '';
+  const texte = String(valeur);
+  return /[;"\n]/.test(texte) ? '"' + texte.replace(/"/g, '""') + '"' : texte;
+}
+</script>
+</body>
+</html>
