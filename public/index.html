@@ -137,7 +137,7 @@
 <script src="vendor/tesseract/tesseract.min.js"></script>
 <script type="module">
 import * as pdfjsLib from './vendor/pdfjs/pdf.min.mjs';
-pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdfjs/pdf.worker.min.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
 
 const zoneDepot = document.getElementById('zoneDepot');
 const entreeFichier = document.getElementById('entreeFichier');
@@ -178,9 +178,9 @@ async function obtenirTravailleurTesseract(rappelEtat) {
   if (travailleurTesseract) return travailleurTesseract;
   rappelEtat('Chargement du moteur de lecture (une seule fois)…');
   travailleurTesseract = await Tesseract.createWorker('fra', 1, {
-    workerPath: 'vendor/tesseract/worker.min.js',
-    corePath: 'vendor/tesseract/tesseract-core-simd-lstm.wasm.js',
-    langPath: 'vendor/tessdata',
+    workerPath: '/vendor/tesseract/worker.min.js',
+    corePath: '/vendor/tesseract/tesseract-core-simd-lstm.wasm.js',
+    langPath: '/vendor/tessdata',
     gzip: true,
   });
   return travailleurTesseract;
