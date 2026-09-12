@@ -133,7 +133,12 @@
   </div>
 </div>
 
-<script>
+<script src="extraction.js"></script>
+<script src="vendor/tesseract/tesseract.min.js"></script>
+<script type="module">
+import * as pdfjsLib from './vendor/pdfjs/pdf.min.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdfjs/pdf.worker.min.mjs';
+
 const zoneDepot = document.getElementById('zoneDepot');
 const entreeFichier = document.getElementById('entreeFichier');
 const etat = document.getElementById('etat');
@@ -145,6 +150,7 @@ const boutonCsv = document.getElementById('boutonCsv');
 const boutonNouveau = document.getElementById('boutonNouveau');
 
 let dernierResultat = null;
+let travailleurTesseract = null;
 
 zoneDepot.addEventListener('click', () => entreeFichier.click());
 zoneDepot.addEventListener('dragover', (e) => { e.preventDefault(); zoneDepot.classList.add('survol'); });
@@ -168,28 +174,84 @@ function reinitialiser() {
   dernierResultat = null;
 }
 
+async function obtenirTravailleurTesseract(rappelEtat) {
+  if (travailleurTesseract) return travailleurTesseract;
+  rappelEtat('Chargement du moteur de lecture (une seule fois)…');
+  travailleurTesseract = await Tesseract.createWorker('fra', 1, {
+    workerPath: 'vendor/tesseract/worker.min.js',
+    corePath: 'vendor/tesseract/tesseract-core-simd-lstm.wasm.js',
+    langPath: 'vendor/tessdata',
+    gzip: true,
+  });
+  return travailleurTesseract;
+}
+
+async function fichierVersCanvas(fichier) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  if (fichier.type === 'application/pdf') {
+    const donnees = await fichier.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: donnees }).promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: 2.5 });
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({ canvasContext: ctx, viewport }).promise;
+  } else {
+    const bitmap = await createImageBitmap(fichier, { imageOrientation: 'from-image' });
+    const dimensionMax = 2000;
+    const echelle = Math.min(1.4, dimensionMax / Math.max(bitmap.width, bitmap.height));
+    canvas.width = Math.round(bitmap.width * echelle);
+    canvas.height = Math.round(bitmap.height * echelle);
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  }
+
+  pretraiterCanvas(canvas);
+  return canvas;
+}
+
+function pretraiterCanvas(canvas) {
+  const ctx = canvas.getContext('2d');
+  const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = image.data;
+  let min = 255;
+  let max = 0;
+
+  for (let i = 0; i < d.length; i += 4) {
+    const gris = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    d[i] = d[i + 1] = d[i + 2] = gris;
+    if (gris < min) min = gris;
+    if (gris > max) max = gris;
+  }
+
+  const plage = (max - min) || 1;
+  for (let i = 0; i < d.length; i += 4) {
+    const v = ((d[i] - min) / plage) * 255;
+    d[i] = d[i + 1] = d[i + 2] = v;
+  }
+  ctx.putImageData(image, 0, 0);
+}
+
 async function traiter(fichier) {
   reinitialiser();
-  etat.textContent = 'Lecture du document…';
+  etat.textContent = 'Préparation du document…';
   etat.classList.add('visible');
 
-  const donnees = new FormData();
-  donnees.append('document', fichier);
-
   try {
-    const reponse = await fetch('analyser.php', { method: 'POST', body: donnees });
-    const corps = await reponse.json();
+    const canvas = await fichierVersCanvas(fichier);
+    const travailleur = await obtenirTravailleurTesseract((msg) => { etat.textContent = msg; });
+
+    etat.textContent = 'Lecture du document (OCR)…';
+    const { data: { text } } = await travailleur.recognize(canvas);
     etat.classList.remove('visible');
 
-    if (!corps.succes) {
-      afficherErreur(corps.erreur || "Échec de la lecture.");
-      return;
-    }
-
-    afficherResultat(corps.champs);
+    const champs = DemoProspect.extraireChampsDepuisTexte(text);
+    afficherResultat(champs);
   } catch (e) {
+    console.error(e);
     etat.classList.remove('visible');
-    afficherErreur("Connexion impossible.");
+    afficherErreur("Échec de la lecture. " + (e && e.message ? e.message : ''));
   }
 }
 
