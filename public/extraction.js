@@ -74,8 +74,9 @@
 
   function chercherFournisseur(lignes) {
     for (const ligne of lignes) {
-      const propre = ligne.trim();
-      if (propre.length >= 3 && /[A-Za-zÀ-ÿ]{3,}/.test(propre) && !DATE_REGEX.test(propre)) {
+      const propre = ligne.trim().replace(/^[^A-Za-zÀ-ÿ0-9]+/, '').trim();
+      const lettres = (propre.match(/[A-Za-zÀ-ÿ]/g) || []).length;
+      if (propre.length >= 3 && lettres >= Math.ceil(propre.length * 0.6) && !DATE_REGEX.test(propre)) {
         return propre;
       }
     }
@@ -83,8 +84,8 @@
   }
 
   function extraireLignesTableau(lignes) {
-    let indexDebut = lignes.findIndex((l) => MOTS_CLES_ENTETE_TABLEAU.test(l));
-    if (indexDebut === -1) indexDebut = 0;
+    const indexDebut = lignes.findIndex((l) => MOTS_CLES_ENTETE_TABLEAU.test(l));
+    if (indexDebut === -1) return [];
 
     const resultat = [];
     for (let i = indexDebut + 1; i < lignes.length; i++) {
