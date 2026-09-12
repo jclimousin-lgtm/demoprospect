@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/nare8592/demoprospect.serviceproi.fr/
+    - /usr/bin/rsync -a public/ $DEPLOYPATH
