@@ -9,7 +9,7 @@ declare(strict_types=1);
  * Usage : php scripts/tester-lot.php /chemin/vers/documents
  */
 
-require __DIR__ . '/../app/_extract.php';
+require __DIR__ . '/../public/_extract.php';
 
 $dossier = $argv[1] ?? null;
 if ($dossier === null || !is_dir($dossier)) {

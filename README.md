@@ -14,9 +14,9 @@ tâche, seul un modèle vision comprend un document jamais vu. Le palier
 gratuit de Gemini (pas de carte bancaire, quotas quotidiens très au-dessus
 du besoin réel) permet de rester à coût nul.
 
-`public/` = docroot du sous-domaine, `app/` et `config/` restent en dehors
-du web (le clone git doit avoir `public/` comme sous-dossier du docroot,
-pas la racine — voir Déploiement).
+`public/` = docroot du sous-domaine, entièrement autonome (aucun fichier
+hors de `public/` n'est requis en prod — la clé Gemini vit côté navigateur,
+jamais sur le serveur). `config/` ne sert qu'au script de test en lot local.
 
 ## Configuration
 
@@ -44,11 +44,14 @@ php scripts/tester-lot.php /chemin/vers/20-documents-inconnus
 
 ## Déploiement o2switch
 
-Racine du document du sous-domaine inchangée
-(`/home/nare8592/demoprospect.serviceproi.fr/`). Mise à jour via l'outil
-Git Version Control de cPanel : "Update from Remote" puis "Deploy HEAD
-Commit" (le `.cpanel.yml` copie `public/` vers le docroot). Aucun fichier
-de config à créer côté serveur — voir plus haut.
+```bash
+tools/deploy/deploy-o2switch.sh
+```
+
+Pousse `public/` par FTP directement vers le docroot du sous-domaine
+(`demoprospect.serviceproi.fr/`), sans passer par cPanel — même mécanisme
+que les autres projets (Jarnac, Convergences). Rien à cliquer côté cPanel,
+aucun fichier de config à créer sur le serveur.
 
 ## Hors périmètre (volontairement)
 

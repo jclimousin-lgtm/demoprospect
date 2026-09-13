@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
 
-require __DIR__ . '/../app/_extract.php';
+require __DIR__ . '/_extract.php';
 
 $cleApi = trim((string) ($_POST['cle_api'] ?? ''));
 
