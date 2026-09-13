@@ -11,12 +11,13 @@
     racine.DemoProspect = fabrique();
   }
 }(typeof self !== 'undefined' ? self : this, function () {
-  const MOTS_CLES_HT = /(total\s*h\.?t\.?|montant\s*h\.?t\.?|sous[\s-]*total)/i;
+  const MOTS_CLES_HT = /(total\s*h\.?t\.?|montant\s*h\.?t\.?|sous[\s-]*total|total\s*(?:net\s*)?hors\s*tva)/i;
   const MOTS_CLES_TVA = /\btva\b/i;
   const MOTS_CLES_TTC = /(total\s*t\.?t\.?c\.?|net\s*[àa]\s*payer|montant\s*d[uû])/i;
   const MOTS_CLES_NUMERO = /(facture|devis|bon\s*de\s*livraison|bon\s*de\s*commande|commande)\s*n[°o]?\s*[:\-]?\s*([A-Z0-9][\w\-\/\.]{1,24})/i;
+  const MOTS_CLES_NUMERO_INVERSE = /n[°o]\s*(?:de\s*)?(?:facture|devis|commande|document)\s*[:\-]?\s*([A-Z0-9][\w\-\/\.]{1,24})/i;
   const MOTS_CLES_NUMERO_GENERIQUE = /n[°o]\s*[:\-]?\s*([A-Z0-9][\w\-\/\.]{1,24})/i;
-  const MOTS_CLES_ENTETE_TABLEAU = /(d[ée]signation|description|libell[ée]).*(qt[ée]|quantit[ée])?/i;
+  const MOTS_CLES_ENTETE_TABLEAU = /(d[ée]signation|description|libell[ée]).*(qt[ée]|quantit[ée])?|€?\s*ht\b.*€?\s*ttc\b/i;
   const DATE_REGEX = /\b(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{1,2}\s+(?:janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[ûu]t|septembre|octobre|novembre|d[ée]cembre)\s+\d{4})\b/i;
 
   function normaliserNombre(brut) {
@@ -56,10 +57,25 @@
     return null;
   }
 
+  function chercherTVA(lignes) {
+    let candidatSansPourcentage = null;
+    for (const ligne of lignes) {
+      if (!MOTS_CLES_TVA.test(ligne)) continue;
+      const { nombres, nbPourcentages } = nombresDansLigne(ligne);
+      if (nombres.length === 0) continue;
+      if (nbPourcentages > 0) return nombres[nombres.length - 1];
+      if (candidatSansPourcentage === null) candidatSansPourcentage = nombres[nombres.length - 1];
+    }
+    return candidatSansPourcentage;
+  }
+
   function chercherNumeroDocument(lignes) {
     for (const ligne of lignes) {
-      const m = MOTS_CLES_NUMERO.exec(ligne) || MOTS_CLES_NUMERO_GENERIQUE.exec(ligne);
-      if (m) return m[m.length - 1];
+      const m = MOTS_CLES_NUMERO.exec(ligne) || MOTS_CLES_NUMERO_INVERSE.exec(ligne) || MOTS_CLES_NUMERO_GENERIQUE.exec(ligne);
+      if (m) {
+        const valeur = m[m.length - 1];
+        if (/\d/.test(valeur)) return valeur;
+      }
     }
     return null;
   }
@@ -122,7 +138,7 @@
       numero_document: chercherNumeroDocument(lignes),
       date: chercherDate(lignes),
       total_ht: chercherMontant(lignes, MOTS_CLES_HT),
-      tva: chercherMontant(lignes, MOTS_CLES_TVA),
+      tva: chercherTVA(lignes),
       total_ttc: chercherMontant(lignes, MOTS_CLES_TTC),
       lignes: extraireLignesTableau(lignes),
     };
