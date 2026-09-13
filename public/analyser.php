@@ -6,15 +6,13 @@ header('Content-Type: application/json; charset=utf-8');
 
 require __DIR__ . '/../app/_extract.php';
 
-$cheminConfig = __DIR__ . '/../config/gemini.php';
-if (!file_exists($cheminConfig)) {
-    http_response_code(500);
-    echo json_encode(['succes' => false, 'erreur' => "Clé API non configurée (config/gemini.php manquant, voir config/gemini.php.example)."]);
+$cleApi = trim((string) ($_POST['cle_api'] ?? ''));
+
+if ($cleApi === '') {
+    http_response_code(400);
+    echo json_encode(['succes' => false, 'erreur' => "Clé API manquante."]);
     exit;
 }
-
-$config = require $cheminConfig;
-$cleApi = $config['api_key'] ?? '';
 
 if (empty($_FILES['document']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
     http_response_code(400);

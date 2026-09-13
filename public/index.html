@@ -179,13 +179,30 @@ function reinitialiser() {
   dernierResultat = null;
 }
 
+function obtenirCleApi() {
+  let cle = localStorage.getItem('gemini_api_key');
+  if (!cle) {
+    cle = window.prompt("Clé API Gemini (une seule fois, gardée dans ce navigateur) :");
+    if (cle) localStorage.setItem('gemini_api_key', cle.trim());
+  }
+  return cle;
+}
+
 async function traiter(fichier) {
   reinitialiser();
+
+  const cleApi = obtenirCleApi();
+  if (!cleApi) {
+    afficherErreur("Clé API requise pour analyser un document.");
+    return;
+  }
+
   etat.textContent = 'Lecture du document…';
   etat.classList.add('visible');
 
   const donnees = new FormData();
   donnees.append('document', fichier);
+  donnees.append('cle_api', cleApi);
 
   try {
     const reponse = await fetch('analyser.php', { method: 'POST', body: donnees });
@@ -193,6 +210,9 @@ async function traiter(fichier) {
     etat.classList.remove('visible');
 
     if (!corps.succes) {
+      if (/cl[ée].{0,20}(api|invalide|manquante)/i.test(corps.erreur || '')) {
+        localStorage.removeItem('gemini_api_key');
+      }
       afficherErreur(corps.erreur || "Échec de la lecture.");
       return;
     }

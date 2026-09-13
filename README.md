@@ -20,9 +20,14 @@ pas la racine — voir Déploiement).
 
 ## Configuration
 
+**Page web** : aucune config serveur — la clé (aistudio.google.com/apikey,
+gratuit, sans carte) est demandée une fois dans le navigateur au premier
+usage et gardée en `localStorage`. Rien à déposer sur le serveur.
+
+**Script de test en lot** (local uniquement) :
 ```bash
 cp config/gemini.php.example config/gemini.php
-# éditer et coller la clé (aistudio.google.com/apikey — gratuit, sans carte)
+# éditer et coller la clé
 ```
 
 ## Lancer en local
@@ -39,17 +44,11 @@ php scripts/tester-lot.php /chemin/vers/20-documents-inconnus
 
 ## Déploiement o2switch
 
-Le sous-domaine `demoprospect.serviceproi.fr` doit avoir pour racine du
-document `/home/nare8592/repositories/demoprospect/public` (le dossier
-`public/` du dépôt cloné via l'outil Git Version Control de cPanel) — pas
-un dossier séparé copié par rsync. Ainsi `config/gemini.php`, créé une
-seule fois à la main dans le Gestionnaire de fichiers à
-`/home/nare8592/repositories/demoprospect/config/gemini.php`, reste hors
-du web tout en étant trouvé par `analyser.php` (chemin relatif
-`../config/gemini.php`).
-
-Mise à jour ensuite : juste "Update from Remote" dans Git Version Control
-(pas de bouton "Deploy" nécessaire, le docroot est directement le dépôt).
+Racine du document du sous-domaine inchangée
+(`/home/nare8592/demoprospect.serviceproi.fr/`). Mise à jour via l'outil
+Git Version Control de cPanel : "Update from Remote" puis "Deploy HEAD
+Commit" (le `.cpanel.yml` copie `public/` vers le docroot). Aucun fichier
+de config à créer côté serveur — voir plus haut.
 
 ## Hors périmètre (volontairement)
 
