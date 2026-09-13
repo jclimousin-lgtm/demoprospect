@@ -6,11 +6,19 @@ header('Content-Type: application/json; charset=utf-8');
 
 require __DIR__ . '/_extract.php';
 
-$cleApi = trim((string) ($_POST['cle_api'] ?? ''));
+$cheminConfig = __DIR__ . '/../demoprospect-config-prive/gemini.php';
+if (!file_exists($cheminConfig)) {
+    http_response_code(500);
+    echo json_encode(['succes' => false, 'erreur' => "Clé API non configurée côté serveur (demoprospect-config-prive/gemini.php manquant)."]);
+    exit;
+}
+
+$config = require $cheminConfig;
+$cleApi = trim((string) ($config['api_key'] ?? ''));
 
 if ($cleApi === '') {
-    http_response_code(400);
-    echo json_encode(['succes' => false, 'erreur' => "Clé API manquante."]);
+    http_response_code(500);
+    echo json_encode(['succes' => false, 'erreur' => "Clé API vide dans la configuration serveur."]);
     exit;
 }
 

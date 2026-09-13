@@ -14,21 +14,24 @@ tâche, seul un modèle vision comprend un document jamais vu. Le palier
 gratuit de Gemini (pas de carte bancaire, quotas quotidiens très au-dessus
 du besoin réel) permet de rester à coût nul.
 
-`public/` = docroot du sous-domaine, entièrement autonome (aucun fichier
-hors de `public/` n'est requis en prod — la clé Gemini vit côté navigateur,
-jamais sur le serveur). `config/` ne sert qu'au script de test en lot local.
+`public/` = docroot du sous-domaine. La clé Gemini vit uniquement côté
+serveur, dans `demoprospect-config-prive/gemini.php` — un dossier **sibling**
+de `public/` (jamais dans le docroot, donc jamais servi au web), même
+convention que `poesie-config-prive`/`convergences-config-prive`. Rien
+côté navigateur, la clé est permanente et invisible pour la personne qui
+utilise la démo.
 
 ## Configuration
 
-**Page web** : aucune config serveur — la clé (aistudio.google.com/apikey,
-gratuit, sans carte) est demandée une fois dans le navigateur au premier
-usage et gardée en `localStorage`. Rien à déposer sur le serveur.
-
-**Script de test en lot** (local uniquement) :
 ```bash
-cp config/gemini.php.example config/gemini.php
-# éditer et coller la clé
+cp demoprospect-config-prive/gemini.php.example demoprospect-config-prive/gemini.php
+# éditer et coller la clé (aistudio.google.com/apikey — gratuit, sans carte)
 ```
+
+En prod, ce fichier est déposé une seule fois à la main (FTP) à
+`demoprospect-config-prive/gemini.php`, au même niveau que
+`demoprospect.serviceproi.fr/` — il n'est jamais touché par
+`tools/deploy/deploy-o2switch.sh`, qui ne pousse que `public/`.
 
 ## Lancer en local
 

@@ -17,7 +17,7 @@ if ($dossier === null || !is_dir($dossier)) {
     exit(1);
 }
 
-$config = require __DIR__ . '/../config/gemini.php';
+$config = require __DIR__ . '/../demoprospect-config-prive/gemini.php';
 $cleApi = $config['api_key'] ?? '';
 
 $typesAcceptes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
