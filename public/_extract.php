@@ -61,7 +61,7 @@ function dp_extraire(string $cheminFichier, string $mimeType, string $cleApi): a
         ],
     ];
 
-    $modele = 'gemini-2.5-flash';
+    $modele = 'gemini-3.1-pro-preview';
     $url = "https://generativelanguage.googleapis.com/v1beta/models/{$modele}:generateContent?key=" . urlencode($cleApi);
 
     $ch = curl_init($url);
