@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+// Le php.ini du serveur limite l'exécution à 30s par défaut, mais l'appel
+// Gemini (vision, gros documents) peut dépasser ça — cf. CURLOPT_TIMEOUT
+// dans _extract.php. On relève la limite pour ce script précis.
+set_time_limit(90);
+
 header('Content-Type: application/json; charset=utf-8');
 
 require __DIR__ . '/_extract.php';

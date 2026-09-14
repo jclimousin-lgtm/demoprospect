@@ -195,6 +195,17 @@ const entreePhoto = document.getElementById('entreePhoto');
 
 let dernierResultat = null;
 
+// Diagnostic : sur certains Android, l'appareil photo (lancé via <input
+// capture>) fait recharger l'onglet en arrière-plan (le système libère la
+// mémoire pendant que l'appli caméra tourne). Ce marqueur permet de
+// distinguer ce cas — page relancée à vide — d'un vrai bug silencieux.
+try {
+  if (sessionStorage.getItem('dp-photo-en-cours')) {
+    sessionStorage.removeItem('dp-photo-en-cours');
+    afficherErreur("La prise de photo a fait recharger la page (mémoire système). Réessayez, ou utilisez « Glissez un document » pour choisir la photo dans votre galerie.");
+  }
+} catch (e) { /* sessionStorage indisponible (navigation privée) : tant pis */ }
+
 zoneDepot.addEventListener('click', () => entreeFichier.click());
 zoneDepot.addEventListener('dragover', (e) => { e.preventDefault(); zoneDepot.classList.add('drag-over'); });
 zoneDepot.addEventListener('dragleave', () => zoneDepot.classList.remove('drag-over'));
@@ -207,8 +218,12 @@ entreeFichier.addEventListener('change', () => {
   if (entreeFichier.files.length) traiter(entreeFichier.files[0]);
 });
 
-boutonPhoto.addEventListener('click', () => entreePhoto.click());
+boutonPhoto.addEventListener('click', () => {
+  try { sessionStorage.setItem('dp-photo-en-cours', '1'); } catch (e) { /* tant pis */ }
+  entreePhoto.click();
+});
 entreePhoto.addEventListener('change', () => {
+  try { sessionStorage.removeItem('dp-photo-en-cours'); } catch (e) { /* tant pis */ }
   if (entreePhoto.files.length) traiter(entreePhoto.files[0]);
 });
 
