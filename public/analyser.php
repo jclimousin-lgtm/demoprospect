@@ -22,9 +22,22 @@ if ($cleApi === '') {
     exit;
 }
 
-if (empty($_FILES['document']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
+if (empty($_FILES['document'])) {
     http_response_code(400);
     echo json_encode(['succes' => false, 'erreur' => "Aucun fichier reçu."]);
+    exit;
+}
+
+if ($_FILES['document']['error'] !== UPLOAD_ERR_OK) {
+    $messagesErreur = [
+        UPLOAD_ERR_INI_SIZE => "Fichier trop volumineux pour le serveur (limite d'envoi dépassée).",
+        UPLOAD_ERR_FORM_SIZE => "Fichier trop volumineux pour le serveur (limite d'envoi dépassée).",
+        UPLOAD_ERR_PARTIAL => "Envoi interrompu, réessayez.",
+        UPLOAD_ERR_NO_FILE => "Aucun fichier reçu.",
+    ];
+    $message = $messagesErreur[$_FILES['document']['error']] ?? "Échec de l'envoi (code {$_FILES['document']['error']}).";
+    http_response_code(400);
+    echo json_encode(['succes' => false, 'erreur' => $message]);
     exit;
 }
 

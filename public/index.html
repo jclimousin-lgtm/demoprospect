@@ -60,7 +60,15 @@
   .dp-dropzone.is-disabled { opacity: .55; pointer-events: none; }
   .dp-dropzone-copy { max-width: 280px; color: var(--dp-ink-soft); font-size: 15px; line-height: 1.45; margin: 0 auto; }
   .dp-icon { width: 32px; height: 32px; display: block; margin: 0 auto var(--dp-space-3); color: var(--dp-ink-faint); }
-  .dp-dropzone input[type="file"] { display: none; }
+
+  /* display:none sur un input file empêche parfois Safari iOS de conserver
+     la photo capturée au retour de l'appareil — on le rend invisible sans
+     le retirer du rendu. */
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
 
   /* Boutons */
   .dp-actions { display: flex; flex-wrap: wrap; gap: var(--dp-space-2); align-items: center; margin-top: var(--dp-space-4); }
@@ -122,7 +130,7 @@
     <div>
       <svg class="dp-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 21V7m0 0-5 5m5-5 5 5M8 18v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <p class="dp-dropzone-copy">Glissez un document ici (PDF, JPG, PNG) — ou cliquez pour en choisir un</p>
-      <input type="file" id="entreeFichier" accept=".pdf,.jpg,.jpeg,.png,.webp">
+      <input type="file" id="entreeFichier" class="visually-hidden" accept=".pdf,.jpg,.jpeg,.png,.webp">
     </div>
   </div>
   <div class="dp-actions">
@@ -130,7 +138,7 @@
       <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M9 10h3l2-3h4l2 3h3a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-9a3 3 0 0 1 3-3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="17" r="4" stroke="currentColor" stroke-width="2"/></svg>
       Prendre une photo
     </button>
-    <input type="file" id="entreePhoto" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="entreePhoto" class="visually-hidden" accept="image/*" capture="environment">
   </div>
 
   <div class="dp-status" id="etat" hidden>
