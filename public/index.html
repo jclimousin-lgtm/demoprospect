@@ -44,8 +44,24 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--dp-bg); color: var(--dp-ink); font-family: var(--dp-font-ui); }
 
-  .dp-app { max-width: 760px; margin: auto; padding: var(--dp-space-6) var(--dp-space-4) 40px; }
-  .dp-title { font-size: 20px; line-height: 1.2; font-weight: 650; letter-spacing: -.02em; margin: 0 0 var(--dp-space-5); }
+  .dp-app { max-width: 760px; margin: auto; padding: var(--dp-space-5) var(--dp-space-4) 40px; }
+
+  /* Bandeau de marque */
+  .dp-hero {
+    background: var(--dp-primary-soft);
+    padding: var(--dp-space-7) var(--dp-space-4) var(--dp-space-6);
+  }
+  .dp-header { max-width: 760px; margin: auto; text-align: center; }
+  .dp-logo {
+    display: inline-flex; align-items: center; gap: 12px;
+    margin: 0; font-size: 25px; font-weight: 700; letter-spacing: -.015em; color: var(--dp-ink);
+  }
+  .dp-logo-mark {
+    width: 42px; height: 42px; flex: none; display: grid; place-items: center;
+    background: var(--dp-primary); border-radius: var(--dp-radius-md); color: #fff;
+  }
+  .dp-logo-mark svg { width: 24px; height: 24px; }
+  .dp-tagline { margin: var(--dp-space-2) 0 0; font-size: 15px; color: var(--dp-ink-soft); }
 
   [hidden] { display: none !important; }
 
@@ -116,16 +132,29 @@
   .dp-table tr:last-child td { border-bottom: 0; }
 
   @media (max-width: 480px) {
-    .dp-app { padding: var(--dp-space-5) var(--dp-space-3) 32px; }
+    .dp-app { padding: var(--dp-space-4) var(--dp-space-3) 32px; }
+    .dp-hero { padding: var(--dp-space-6) var(--dp-space-3) var(--dp-space-5); }
     .dp-fields { grid-template-columns: 1fr; }
-    .dp-title { font-size: 19px; }
+    .dp-logo { font-size: 21px; gap: 10px; }
+    .dp-logo-mark { width: 36px; height: 36px; }
+    .dp-logo-mark svg { width: 20px; height: 20px; }
+    .dp-tagline { font-size: 14px; }
   }
 </style>
 </head>
 <body>
+<div class="dp-hero">
+  <header class="dp-header">
+    <h1 class="dp-logo">
+      <span class="dp-logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M9 4h9l6 6v18H9a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2"/><path d="M18 4v7h7" stroke="currentColor" stroke-width="2"/><path d="M11 16h10M11 21h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      DemoProspect
+    </h1>
+    <p class="dp-tagline">Lecture de documents</p>
+  </header>
+</div>
 <div class="dp-app">
-  <h1 class="dp-title">Lecture de documents</h1>
-
   <div class="dp-dropzone" id="zoneDepot">
     <div>
       <svg class="dp-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 21V7m0 0-5 5m5-5 5 5M8 18v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
