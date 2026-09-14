@@ -4,135 +4,166 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lecture de documents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;550;650;700&display=swap" rel="stylesheet">
 <style>
-  :root { color-scheme: light; }
+  /* Design tokens — livraison designer 2026-09-14 */
+  :root {
+    color-scheme: light;
+    --dp-bg: #F7F5EF;
+    --dp-surface: #FFFFFF;
+    --dp-surface-muted: #EEECE5;
+    --dp-ink: #202522;
+    --dp-ink-soft: #68706B;
+    --dp-ink-faint: #929993;
+    --dp-line: #D8D8D0;
+    --dp-primary: #2457D6;
+    --dp-primary-hover: #1D47B4;
+    --dp-primary-soft: #E8EEFF;
+    --dp-warning: #A86200;
+    --dp-warning-soft: #FFF2DD;
+    --dp-error: #B42318;
+    --dp-error-soft: #FDECEC;
+    --dp-radius-sm: 8px;
+    --dp-radius-md: 12px;
+    --dp-radius-lg: 16px;
+    --dp-space-1: 4px;
+    --dp-space-2: 8px;
+    --dp-space-3: 12px;
+    --dp-space-4: 16px;
+    --dp-space-5: 20px;
+    --dp-space-6: 24px;
+    --dp-space-7: 32px;
+    --dp-space-8: 40px;
+    --dp-font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #fafaf9;
-    color: #1c1c1a;
-    padding: 32px 16px 80px;
-  }
-  .conteneur { max-width: 720px; margin: 0 auto; }
-  h1 { font-size: 1.15rem; font-weight: 600; margin: 0 0 24px; color: #44403c; }
+  body { margin: 0; background: var(--dp-bg); color: var(--dp-ink); font-family: var(--dp-font-ui); }
 
-  .zone-depot {
-    border: 2px dashed #c9c5bd;
-    border-radius: 10px;
-    padding: 48px 20px;
-    text-align: center;
-    cursor: pointer;
-    background: #fff;
-    transition: border-color .15s, background .15s;
-  }
-  .zone-depot.survol { border-color: #57534e; background: #f5f4f1; }
-  .zone-depot p { margin: 0; color: #78716c; font-size: .95rem; }
-  .zone-depot input { display: none; }
+  .dp-app { max-width: 760px; margin: auto; padding: var(--dp-space-6) var(--dp-space-4) 40px; }
+  .dp-title { font-size: 20px; line-height: 1.2; font-weight: 650; letter-spacing: -.02em; margin: 0 0 var(--dp-space-5); }
 
-  .etat {
-    margin-top: 20px;
-    font-size: .9rem;
-    color: #78716c;
-    display: none;
-  }
-  .etat.visible { display: block; }
+  [hidden] { display: none !important; }
 
-  .erreur {
-    margin-top: 20px;
-    padding: 14px 16px;
-    border-radius: 8px;
-    background: #fef2f2;
-    color: #991b1b;
-    font-size: .9rem;
-    display: none;
+  /* Zone de dépôt */
+  .dp-dropzone {
+    min-height: 180px; display: grid; place-items: center; text-align: center;
+    padding: var(--dp-space-6); background: var(--dp-surface);
+    border: 1.5px dashed #AEB3AE; border-radius: var(--dp-radius-lg);
+    cursor: pointer; transition: border-color .15s, background .15s, opacity .15s;
   }
-  .erreur.visible { display: block; }
+  .dp-dropzone.drag-over { border-color: var(--dp-primary); background: var(--dp-primary-soft); }
+  .dp-dropzone.is-disabled { opacity: .55; pointer-events: none; }
+  .dp-dropzone-copy { max-width: 280px; color: var(--dp-ink-soft); font-size: 15px; line-height: 1.45; margin: 0 auto; }
+  .dp-icon { width: 32px; height: 32px; display: block; margin: 0 auto var(--dp-space-3); color: var(--dp-ink-faint); }
+  .dp-dropzone input[type="file"] { display: none; }
 
-  .resultat { margin-top: 32px; display: none; }
-  .resultat.visible { display: block; }
-
-  .champs-entete {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px 20px;
-    margin-bottom: 20px;
-    padding: 16px;
-    background: #fff;
-    border: 1px solid #e7e5e4;
-    border-radius: 8px;
+  /* Boutons */
+  .dp-actions { display: flex; flex-wrap: wrap; gap: var(--dp-space-2); align-items: center; margin-top: var(--dp-space-4); }
+  .dp-button {
+    display: inline-flex; align-items: center; gap: 8px;
+    min-height: 44px; border-radius: var(--dp-radius-sm); padding: 10px 14px;
+    border: 1px solid transparent; font: 600 14px/1 var(--dp-font-ui); cursor: pointer;
   }
-  .champ dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .03em; color: #a8a29e; margin-bottom: 2px; }
-  .champ dd { margin: 0; font-size: .95rem; font-weight: 500; }
+  .dp-button svg { width: 16px; height: 16px; flex: none; }
+  .dp-button-primary { background: var(--dp-primary); color: #fff; }
+  .dp-button-primary:hover { background: var(--dp-primary-hover); }
+  .dp-button-secondary { background: var(--dp-surface); color: var(--dp-ink); border-color: var(--dp-line); }
+  .dp-button-secondary:hover { background: var(--dp-surface-muted); }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-    border: 1px solid #e7e5e4;
-    border-radius: 8px;
-    overflow: hidden;
-    font-size: .88rem;
-  }
-  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #f0efec; }
-  th { background: #f5f4f1; font-weight: 600; color: #57534e; font-size: .76rem; text-transform: uppercase; letter-spacing: .02em; }
-  td.num, th.num { text-align: right; }
-  tr:last-child td { border-bottom: none; }
+  /* État de chargement */
+  .dp-status { display: flex; align-items: center; gap: 10px; min-height: 44px; margin-top: var(--dp-space-5); color: var(--dp-ink-soft); font-size: 14px; }
+  .dp-spinner { width: 18px; height: 18px; border: 2px solid #D7DCE8; border-top-color: var(--dp-primary); border-radius: 50%; animation: dp-spin .8s linear infinite; flex: none; }
+  @keyframes dp-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .dp-spinner { animation-duration: 2.4s; } }
 
-  .actions { margin-top: 20px; display: flex; gap: 10px; align-items: center; }
-  button {
-    font: inherit;
-    padding: 9px 16px;
-    border-radius: 7px;
-    border: 1px solid #292524;
-    background: #292524;
-    color: #fff;
-    cursor: pointer;
-    font-size: .88rem;
+  /* Erreur */
+  .dp-error {
+    display: flex; align-items: center; gap: 10px; margin-top: var(--dp-space-5);
+    padding: 12px 14px; border: 1px solid #F3C5C1; background: var(--dp-error-soft);
+    color: var(--dp-error); border-radius: var(--dp-radius-md); font-size: 14px;
   }
-  button:hover { background: #44403c; }
-  button.secondaire {
-    background: #fff;
-    color: #292524;
-    border-color: #d6d3d1;
-  }
-  button.secondaire:hover { background: #f5f4f1; }
+  .dp-error svg { width: 20px; height: 20px; flex: none; }
 
-  .confiance-basse { color: #b45309; }
+  /* Résultat */
+  .dp-result { margin-top: var(--dp-space-7); }
+  .dp-fields {
+    display: grid; grid-template-columns: 1fr 1fr; gap: var(--dp-space-3);
+    padding: var(--dp-space-4); background: var(--dp-surface); border: 1px solid var(--dp-line);
+    border-radius: var(--dp-radius-md); margin: 0 0 var(--dp-space-4);
+  }
+  .dp-field dt { margin: 0 0 3px; color: var(--dp-ink-faint); font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; }
+  .dp-field dd { margin: 0; font-size: 14px; font-weight: 550; }
+  .dp-confidence-low { color: var(--dp-warning); }
+
+  .dp-table-wrap { overflow: auto; background: var(--dp-surface); border: 1px solid var(--dp-line); border-radius: var(--dp-radius-md); }
+  .dp-table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 13px; }
+  .dp-table th { background: var(--dp-surface-muted); color: var(--dp-ink-soft); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; text-align: left; }
+  .dp-table th, .dp-table td { padding: 10px 12px; border-bottom: 1px solid #ECECE6; }
+  .dp-table td.num, .dp-table th.num { text-align: right; }
+  .dp-table tr:last-child td { border-bottom: 0; }
+
+  @media (max-width: 480px) {
+    .dp-app { padding: var(--dp-space-5) var(--dp-space-3) 32px; }
+    .dp-fields { grid-template-columns: 1fr; }
+    .dp-title { font-size: 19px; }
+  }
 </style>
 </head>
 <body>
-<div class="conteneur">
-  <h1>Lecture de documents</h1>
+<div class="dp-app">
+  <h1 class="dp-title">Lecture de documents</h1>
 
-  <div class="zone-depot" id="zoneDepot">
-    <p>Glissez un document ici (PDF, JPG, PNG) — ou cliquez pour en choisir un</p>
-    <input type="file" id="entreeFichier" accept=".pdf,.jpg,.jpeg,.png,.webp">
+  <div class="dp-dropzone" id="zoneDepot">
+    <div>
+      <svg class="dp-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 21V7m0 0-5 5m5-5 5 5M8 18v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <p class="dp-dropzone-copy">Glissez un document ici (PDF, JPG, PNG) — ou cliquez pour en choisir un</p>
+      <input type="file" id="entreeFichier" accept=".pdf,.jpg,.jpeg,.png,.webp">
+    </div>
   </div>
-  <div class="actions">
-    <button class="secondaire" id="boutonPhoto">Prendre une photo</button>
+  <div class="dp-actions">
+    <button class="dp-button dp-button-secondary" id="boutonPhoto" type="button">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M9 10h3l2-3h4l2 3h3a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-9a3 3 0 0 1 3-3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="17" r="4" stroke="currentColor" stroke-width="2"/></svg>
+      Prendre une photo
+    </button>
     <input type="file" id="entreePhoto" accept="image/*" capture="environment" style="display:none">
   </div>
 
-  <div class="etat" id="etat">Lecture du document…</div>
-  <div class="erreur" id="erreur"></div>
+  <div class="dp-status" id="etat" hidden>
+    <span class="dp-spinner" aria-hidden="true"></span>
+    <span>Lecture du document…</span>
+  </div>
 
-  <div class="resultat" id="resultat">
-    <dl class="champs-entete" id="champsEntete"></dl>
-    <table>
-      <thead>
-        <tr>
-          <th>Désignation</th>
-          <th class="num">Qté</th>
-          <th class="num">Prix unitaire</th>
-          <th class="num">Montant</th>
-        </tr>
-      </thead>
-      <tbody id="corpsLignes"></tbody>
-    </table>
-    <div class="actions">
-      <button id="boutonCsv">Télécharger CSV</button>
-      <button class="secondaire" id="boutonNouveau">Nouveau document</button>
+  <div class="dp-error" id="erreur" hidden>
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 5 28 26H4L16 5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M16 12v7m0 3v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span id="texteErreur"></span>
+  </div>
+
+  <div class="dp-result" id="resultat" hidden>
+    <dl class="dp-fields" id="champsEntete"></dl>
+    <div class="dp-table-wrap">
+      <table class="dp-table">
+        <thead>
+          <tr>
+            <th>Désignation</th>
+            <th class="num">Qté</th>
+            <th class="num">Prix unitaire</th>
+            <th class="num">Montant</th>
+          </tr>
+        </thead>
+        <tbody id="corpsLignes"></tbody>
+      </table>
+    </div>
+    <div class="dp-actions">
+      <button class="dp-button dp-button-primary" id="boutonCsv" type="button">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 6v14m0 0-5-5m5 5 5-5M8 23v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Télécharger CSV
+      </button>
+      <button class="dp-button dp-button-secondary" id="boutonNouveau" type="button">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M25 10v6h-6M7 22v-6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 14a8 8 0 0 1 14.5-3M23 18a8 8 0 0 1-14.5 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Nouveau document
+      </button>
     </div>
   </div>
 </div>
@@ -142,6 +173,7 @@ const zoneDepot = document.getElementById('zoneDepot');
 const entreeFichier = document.getElementById('entreeFichier');
 const etat = document.getElementById('etat');
 const erreur = document.getElementById('erreur');
+const texteErreur = document.getElementById('texteErreur');
 const resultat = document.getElementById('resultat');
 const champsEntete = document.getElementById('champsEntete');
 const corpsLignes = document.getElementById('corpsLignes');
@@ -153,11 +185,11 @@ const entreePhoto = document.getElementById('entreePhoto');
 let dernierResultat = null;
 
 zoneDepot.addEventListener('click', () => entreeFichier.click());
-zoneDepot.addEventListener('dragover', (e) => { e.preventDefault(); zoneDepot.classList.add('survol'); });
-zoneDepot.addEventListener('dragleave', () => zoneDepot.classList.remove('survol'));
+zoneDepot.addEventListener('dragover', (e) => { e.preventDefault(); zoneDepot.classList.add('drag-over'); });
+zoneDepot.addEventListener('dragleave', () => zoneDepot.classList.remove('drag-over'));
 zoneDepot.addEventListener('drop', (e) => {
   e.preventDefault();
-  zoneDepot.classList.remove('survol');
+  zoneDepot.classList.remove('drag-over');
   if (e.dataTransfer.files.length) traiter(e.dataTransfer.files[0]);
 });
 entreeFichier.addEventListener('change', () => {
@@ -173,8 +205,8 @@ boutonNouveau.addEventListener('click', reinitialiser);
 boutonCsv.addEventListener('click', telechargerCsv);
 
 function reinitialiser() {
-  resultat.classList.remove('visible');
-  erreur.classList.remove('visible');
+  resultat.hidden = true;
+  erreur.hidden = true;
   entreeFichier.value = '';
   dernierResultat = null;
 }
@@ -182,8 +214,8 @@ function reinitialiser() {
 async function traiter(fichier) {
   reinitialiser();
 
-  etat.textContent = 'Lecture du document…';
-  etat.classList.add('visible');
+  zoneDepot.classList.add('is-disabled');
+  etat.hidden = false;
 
   const donnees = new FormData();
   donnees.append('document', fichier);
@@ -191,7 +223,8 @@ async function traiter(fichier) {
   try {
     const reponse = await fetch('analyser.php', { method: 'POST', body: donnees });
     const corps = await reponse.json();
-    etat.classList.remove('visible');
+    etat.hidden = true;
+    zoneDepot.classList.remove('is-disabled');
 
     if (!corps.succes) {
       afficherErreur(corps.erreur || "Échec de la lecture.");
@@ -200,14 +233,15 @@ async function traiter(fichier) {
 
     afficherResultat(corps.champs);
   } catch (e) {
-    etat.classList.remove('visible');
+    etat.hidden = true;
+    zoneDepot.classList.remove('is-disabled');
     afficherErreur("Connexion impossible.");
   }
 }
 
 function afficherErreur(message) {
-  erreur.textContent = message;
-  erreur.classList.add('visible');
+  texteErreur.textContent = message;
+  erreur.hidden = false;
 }
 
 function afficherResultat(champs) {
@@ -217,13 +251,13 @@ function afficherResultat(champs) {
     ['Fournisseur', champs.fournisseur],
     ['N° document', champs.numero_document],
     ['Date', champs.date],
-    ['Total HT', formaterMontant(champs.total_ht)],
-    ['TVA', formaterMontant(champs.tva)],
-    ['Total TTC', formaterMontant(champs.total_ttc)],
+    ['Total HT', formaterMontant(champs.total_ht, true)],
+    ['TVA', formaterMontant(champs.tva, true)],
+    ['Total TTC', formaterMontant(champs.total_ttc, true)],
   ];
 
   champsEntete.innerHTML = entetes.map(([libelle, valeur]) => `
-    <div class="champ">
+    <div class="dp-field">
       <dt>${libelle}</dt>
       <dd>${valeur || '—'}</dd>
     </div>
@@ -231,9 +265,9 @@ function afficherResultat(champs) {
 
   if (champs.confiance === 'basse') {
     champsEntete.innerHTML += `
-      <div class="champ">
+      <div class="dp-field">
         <dt>Confiance</dt>
-        <dd class="confiance-basse">basse</dd>
+        <dd class="dp-confidence-low">basse</dd>
       </div>`;
   }
 
@@ -249,13 +283,15 @@ function afficherResultat(champs) {
       `).join('')
     : '<tr><td colspan="4">Aucune ligne détectée.</td></tr>';
 
-  resultat.classList.add('visible');
+  resultat.hidden = false;
 }
 
-function formaterMontant(valeur) {
+function formaterMontant(valeur, avecDevise) {
   if (valeur === undefined || valeur === null || valeur === '') return '';
   const nombre = Number(valeur);
-  return Number.isFinite(nombre) ? nombre.toFixed(2) : String(valeur);
+  if (!Number.isFinite(nombre)) return String(valeur);
+  const texte = nombre.toFixed(2);
+  return avecDevise ? texte + ' €' : texte;
 }
 
 function telechargerCsv() {
