@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/_gemini-journal.php';
+
 /**
  * Appelle Gemini (vision / document) avec un schéma de sortie forcé
  * (responseSchema) pour garantir une extraction structurée fiable plutôt
@@ -82,6 +84,7 @@ function dp_extraire(string $cheminFichier, string $mimeType, string $cleApi): a
     }
 
     $reponse = json_decode($reponseBrute, true);
+    sp_gemini_journal('demoprospect', 'analyse-document', $modele, $reponse);
 
     if ($codeHttp !== 200) {
         $message = $reponse['error']['message'] ?? $reponseBrute;
